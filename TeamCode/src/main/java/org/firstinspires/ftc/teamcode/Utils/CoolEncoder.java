@@ -9,6 +9,8 @@ public class CoolEncoder {
     private final DcMotorEx motor;
     private boolean reversed = false;
 
+    private static int offset;
+
     public CoolEncoder(HardwareMap hm, String hmName, boolean reversed){
         this.motor = hm.get(DcMotorEx.class, hmName);
         this.reversed = reversed;
@@ -20,6 +22,11 @@ public class CoolEncoder {
     }
 
     public int getCurrentPosition(){
+        if(reversed && motor.getDirection() == DcMotorSimple.Direction.FORWARD) return -(motor.getCurrentPosition() - offset);
+        return motor.getCurrentPosition() - offset;
+    }
+
+    public int getRawCurrentPosition(){
         if(reversed && motor.getDirection() == DcMotorSimple.Direction.FORWARD) return -motor.getCurrentPosition();
         return motor.getCurrentPosition();
     }
@@ -30,9 +37,7 @@ public class CoolEncoder {
     }
 
     public void reset(){
-        DcMotorEx.RunMode prev = motor.getMode();
-        motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motor.setMode(prev);
+        offset = motor.getCurrentPosition();
     }
 
     public void setReversed(boolean rev){

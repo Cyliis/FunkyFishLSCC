@@ -2,12 +2,12 @@ package org.firstinspires.ftc.teamcode.Utils;
 
 import com.arcrobotics.ftclib.geometry.Vector2d;
 
-public class CubicSpline2dMotionProfile {
+public class CubicBezier2dMotionProfile {
 
     private final Vector2d a, b, c;
     private double time = 1;
 
-    public CubicSpline2dMotionProfile(Vector2d a, Vector2d b, Vector2d c, double time){
+    public CubicBezier2dMotionProfile(Vector2d a, Vector2d b, Vector2d c, double time){
         this.a = a;
         this.b = b;
         this.c = c;

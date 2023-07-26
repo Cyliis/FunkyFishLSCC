@@ -1,95 +1,84 @@
 package org.firstinspires.ftc.teamcode.Modules;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.hardware.Servo;
 
-import org.firstinspires.ftc.teamcode.Utils.CoolDigitalSensor;
+import org.firstinspires.ftc.teamcode.Utils.CoolServo;
 import org.firstinspires.ftc.teamcode.Utils.IRobotModule;
 
+@Config
 public class HorizontalExtension implements IRobotModule {
+    private CoolServo servo1, servo2;
+    public static String servo1Name = "servo1", servo2Name = "servo2";
+    public static boolean servo1Reversed = false, servo2Reversed = true;
 
-    public static double inPosition = 0, scorePosition = 200;
-    public static double maxExtension = 400;
+    public static double inPosition = 0;
+    public static double maxOutPosition = 0.8;
+    public static double intermediaryOutPosition = 0.5;
+    public static double currentOutPosition = intermediaryOutPosition;
 
-    public ElapsedTime timeSinceLastStateChange;
-
-    public static double resetStep = 10;
-
-    public static String limitSwitchName = "hExtLimitSwitch";
-
-    private final CoolDigitalSensor limitSwitch;
-
-    private static double offset = 0;
-
-    private final DiffyCrane crane;
+    public static double maxSpeed = 2;
 
     public enum State{
-        In(inPosition), GoingIn(inPosition), GoingScore(scorePosition), Score(scorePosition),
-        GoingToReset(inPosition), Reset(inPosition);
+        In(inPosition), GoingIn(inPosition), Out(currentOutPosition), GoingOut(currentOutPosition);
+
         double pos;
+
         State(double pos){
             this.pos = pos;
         }
-        double getPos(){
-            return pos;
-        }
-        double getOffsetPos(){
-            return pos + offset;
-        }
-        void setPos(double pos){
-            this.pos = pos;
+
+        static void updatePositions(){
+            In.pos = inPosition;
+            GoingIn.pos = inPosition;
+            Out.pos = currentOutPosition;
+            GoingOut.pos = currentOutPosition;
         }
     }
 
-    public HorizontalExtension(HardwareMap hm, DiffyCrane crane){
-        limitSwitch = new CoolDigitalSensor(hm, limitSwitchName);
-        this.crane = crane;
+    private State state = State.In;
+
+    public HorizontalExtension(HardwareMap hm){
+        servo1 = new CoolServo(hm, servo1Name, servo1Reversed, maxSpeed, state.pos);
+        servo2 = new CoolServo(hm, servo2Name, servo2Reversed, maxSpeed, state.pos);
     }
 
-    private State currentState = State.GoingIn;
-
-    public void setState(State state){
-        if(currentState == state) return;
-        this.currentState = state;
-        timeSinceLastStateChange.reset();
+    private void setState(State state){
+        if(state == this.state) return;
+        this.state = state;
     }
 
     public State getState(){
-        return currentState;
+        return state;
     }
 
-    @Override
-    public void updateState() {
-        switch (currentState){
+    private void updateState(){
+        switch (this.state){
             case In:
-            case Score:
-                break;
-            case Reset:
-                if(limitSwitch.getState()) setState(State.In);
-                else {
-                    offset -= resetStep;
-                    setState(State.GoingToReset);
-                }
-                break;
-            case GoingToReset:
-                if(Math.abs(crane.getCurrentHorizontalPosition() - State.Reset.getOffsetPos()) <= DiffyCrane.positionTolerance)
-                    setState(State.Reset);
+            case Out:
                 break;
             case GoingIn:
-                if(Math.abs(crane.getCurrentHorizontalPosition() - State.In.getOffsetPos()) <= DiffyCrane.positionTolerance)
-                    setState(State.Reset);
+                if(servo1.getTimeToMotionEnd() == 0 && servo2.getTimeToMotionEnd() == 0) setState(State.In);
                 break;
-            case GoingScore:
-                if(Math.abs(crane.getCurrentHorizontalPosition() - State.Score.getOffsetPos()) <= DiffyCrane.positionTolerance)
-                    setState(State.Score);
+            case GoingOut:
+                if(servo1.getTimeToMotionEnd() == 0 && servo2.getTimeToMotionEnd() == 0) setState(State.Out);
                 break;
         }
+    }
+
+    private void updateServos(){
+        servo1.setPosition(state.pos);
+        servo2.setPosition(state.pos);
+        servo1.update();
+        servo2.update();
     }
 
     @Override
     public void update() {
+        State.updatePositions();
         updateState();
-        crane.setTargetHorizontalPosition(currentState.getOffsetPos());
+        updateServos();
     }
 
     @Override

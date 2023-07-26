@@ -1,95 +1,120 @@
 package org.firstinspires.ftc.teamcode.Modules;
 
-import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.util.ElapsedTime;
+import static java.lang.Math.PI;
 
-import org.firstinspires.ftc.teamcode.Utils.CoolDigitalSensor;
+import com.acmerobotics.dashboard.config.Config;
+import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.PIDCoefficients;
+
+import org.firstinspires.ftc.teamcode.Utils.AsymmetricMotionProfile;
+import org.firstinspires.ftc.teamcode.Utils.CoolEncoder;
+import org.firstinspires.ftc.teamcode.Utils.CoolMotor;
+import org.firstinspires.ftc.teamcode.Utils.CoolServo;
 import org.firstinspires.ftc.teamcode.Utils.IRobotModule;
 
+@Config
 public class VerticalExtension implements IRobotModule {
+    private CoolMotor motor1, motor2;
+    public static String motor1Name = "lift1", motor2Name = "lift2";
+    public static boolean motor1Reversed = false, motor2Reversed = true;
+    private CoolEncoder encoder;
+    public static String encoderName = "lift1";
+    public static boolean encoderReversed = false;
 
-    public static double inPosition = 0, scorePosition = 1000;
-    public static double maxExtension = 1400;
+    //units will be in meters
+    public static final double ticksPerRev = 28, gearRatio = 5.2, pulleyDiameter = 35.65/1000.0;
+    public static final double ticksPerMeter = ticksPerRev*gearRatio/(pulleyDiameter*PI);
 
-    public ElapsedTime timeSinceLastStateChange;
+    public static double inPosition = 0;
+    public static double maxOutPosition = 1.2;
+    public static double intermediaryOutPosition = 0.9;
+    public static double currentOutPosition = intermediaryOutPosition;
 
-    public static double resetStep = 10;
+    public static double maxSpeed = ticksPerMeter/((ticksPerRev*gearRatio)/(6000.0/gearRatio));
 
-    public static String limitSwitchName = "hVerLimitSwitch";
+    public static double upVelocityPercent = 0.9, downVelocityPercent = 0.75;
 
-    private final CoolDigitalSensor limitSwitch;
+    public static PIDCoefficients pidCoefficients = new PIDCoefficients(0,0,0);
+    public static double ff1 = 0.1, ff2 = 0.001;
 
-    private static double offset = 0;
-
-    private final DiffyCrane crane;
+    private final AsymmetricMotionProfile profile = new AsymmetricMotionProfile(maxSpeed*upVelocityPercent, maxSpeed*downVelocityPercent);
 
     public enum State{
-        In(inPosition), GoingIn(inPosition), GoingScore(scorePosition), Score(scorePosition),
-        GoingToReset(inPosition), Reset(inPosition);
+        In(inPosition), GoingIn(inPosition), Out(currentOutPosition), GoingOut(currentOutPosition);
+
         double pos;
+
         State(double pos){
             this.pos = pos;
         }
-        double getPos(){
-            return pos;
-        }
-        double getOffsetPos(){
-            return pos + offset;
-        }
-        void setPos(double pos){
-            this.pos = pos;
+
+        static void updatePositions(){
+            In.pos = inPosition;
+            Out.pos = currentOutPosition;
         }
     }
 
-    public VerticalExtension(HardwareMap hm, DiffyCrane crane){
-        limitSwitch = new CoolDigitalSensor(hm, limitSwitchName);
-        this.crane = crane;
+    private State state = State.In;
+
+    public VerticalExtension(HardwareMap hm){
+        motor1 = new CoolMotor(hm, motor1Name, CoolMotor.RunMode.PID, motor1Reversed);
+        motor2 = new CoolMotor(hm, motor2Name, CoolMotor.RunMode.PID, motor2Reversed);
+
+        encoder = new CoolEncoder(hm, encoderName, encoderReversed);
     }
 
-    private State currentState = State.GoingIn;
-
-    public void setState(State state){
-        if(currentState == state) return;
-        this.currentState = state;
-        timeSinceLastStateChange.reset();
+    private void setState(State state){
+        if(state == this.state) return;
+        this.state = state;
+        switch (state){
+            case GoingIn:
+                profile.setMotion(encoder.getCurrentPosition(), State.In.pos);
+                break;
+            case GoingOut:
+                profile.setMotion(encoder.getCurrentPosition(), State.Out.pos);
+                break;
+        }
     }
 
     public State getState(){
-        return currentState;
+        return state;
     }
 
-    @Override
-    public void updateState() {
-        switch (currentState){
+    public static int positionTolerance = 5;
+
+    private void updateState(){
+        switch (this.state){
             case In:
-            case Score:
-                break;
-            case Reset:
-                if(limitSwitch.getState()) setState(State.In);
-                else {
-                    offset -= resetStep;
-                    setState(State.GoingToReset);
-                }
-                break;
-            case GoingToReset:
-                if(Math.abs(crane.getCurrentVerticalPosition() - State.Reset.getOffsetPos()) <= DiffyCrane.positionTolerance)
-                    setState(State.Reset);
+            case Out:
                 break;
             case GoingIn:
-                if(Math.abs(crane.getCurrentVerticalPosition() - State.In.getOffsetPos()) <= DiffyCrane.positionTolerance)
-                    setState(State.Reset);
+                State.GoingIn.pos = profile.getProfilePosition();
+                if(Math.abs(encoder.getCurrentPosition() * ticksPerMeter - State.In.pos) <= positionTolerance)
+                    setState(State.In);
                 break;
-            case GoingScore:
-                if(Math.abs(crane.getCurrentVerticalPosition() - State.Score.getOffsetPos()) <= DiffyCrane.positionTolerance)
-                    setState(State.Score);
+            case GoingOut:
+                State.GoingOut.pos = profile.getProfilePosition();
+                if(Math.abs(encoder.getCurrentPosition() * ticksPerMeter - State.Out.pos) <= positionTolerance)
+                    setState(State.Out);
                 break;
         }
+    }
+
+    private void updateMotors(){
+        double current = encoder.getCurrentPosition()/ticksPerMeter;
+        motor1.setPIDF(pidCoefficients, ff1 + ff2*current);
+        motor2.setPIDF(pidCoefficients, ff1 + ff2*current);
+        motor1.calculatePower(current, state.pos);
+        motor2.calculatePower(current, state.pos);
+        motor1.update();
+        motor2.update();
     }
 
     @Override
     public void update() {
+        State.updatePositions();
         updateState();
-        crane.setTargetVerticalPosition(currentState.getOffsetPos());
+        updateMotors();
     }
 
     @Override

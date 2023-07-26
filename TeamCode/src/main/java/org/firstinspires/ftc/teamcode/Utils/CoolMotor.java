@@ -44,8 +44,8 @@ public class CoolMotor {
         this(hm, name, RunMode.RUN, false);
     }
 
-    public void setDirection(DcMotorSimple.Direction direction){
-        motor.setDirection(direction);
+    public void setZeroPowerBehaviour(DcMotor.ZeroPowerBehavior zeroPowerBehaviour){
+        motor.setZeroPowerBehavior(zeroPowerBehaviour);
     }
 
     public void setMode(RunMode runMode){
@@ -65,6 +65,13 @@ public class CoolMotor {
 
     private double feedforward;
 
+    public void setPIDF(PIDCoefficients pidCoefficients, double feedforward){
+        this.feedforward = feedforward;
+        this.pidCoefficients.p = pidCoefficients.p;
+        this.pidCoefficients.i = pidCoefficients.i;
+        this.pidCoefficients.d = pidCoefficients.d;
+    }
+
     public void setPIDF(PIDFCoefficients pidfCoefficients, double feedforward){
         this.feedforward = feedforward;
         pidCoefficients.p = pidfCoefficients.p;
@@ -78,7 +85,7 @@ public class CoolMotor {
         power = feedforward + pidController.calculate(current,target);
     }
 
-    public void loop(){
+    public void update(){
         motor.setPower(power);
     }
 

@@ -9,25 +9,31 @@ public class CoolServo {
     private AsymmetricMotionProfile profile;
     private boolean isProfiled = false;
 
-    public CoolServo(HardwareMap hm, String name){
+    public CoolServo(HardwareMap hm, String name, boolean reversed, double initialPosition){
         servo = hm.get(Servo.class, name);
+        if(reversed) servo.setDirection(Servo.Direction.REVERSE);
+        setInitialPosition(initialPosition);
     }
 
-    public CoolServo(HardwareMap hm, String name, double profileMaxPositiveRate, double profileMaxNegativeRate){
+    public CoolServo(HardwareMap hm, String name, boolean reversed, double profileMaxPositiveRate, double profileMaxNegativeRate, double initialPosition){
         servo = hm.get(Servo.class, name);
+        if(reversed) servo.setDirection(Servo.Direction.REVERSE);
         profile = new AsymmetricMotionProfile(profileMaxPositiveRate, profileMaxNegativeRate);
         isProfiled = true;
+        setInitialPosition(initialPosition);
     }
 
-    public CoolServo(HardwareMap hm, String name, double profileMaxRate){
-        this(hm, name, profileMaxRate, profileMaxRate);
-    }
-
-    public void setDirection(Servo.Direction direction){
-        servo.setDirection(direction);
+    public CoolServo(HardwareMap hm, String name, boolean reversed, double profileMaxRate, double initialPosition){
+        this(hm, name, reversed, profileMaxRate, profileMaxRate, initialPosition);
     }
 
     private double cachedPosition, targetPosition;
+
+    private void setInitialPosition(double pos){
+        cachedPosition = pos;
+        targetPosition = pos;
+        servo.setPosition(pos);
+    }
 
     public void setPosition(double position){
         if(position == targetPosition) return;
@@ -46,4 +52,12 @@ public class CoolServo {
         }
     }
 
+    public boolean isProfiled() {
+        return isProfiled;
+    }
+
+    public double getTimeToMotionEnd(){
+        if(!isProfiled) return 0;
+        return profile.getTimeToMotionEnd();
+    }
 }
