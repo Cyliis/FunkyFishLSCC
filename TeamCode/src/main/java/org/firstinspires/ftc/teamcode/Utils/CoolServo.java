@@ -15,16 +15,16 @@ public class CoolServo {
         setInitialPosition(initialPosition);
     }
 
-    public CoolServo(HardwareMap hm, String name, boolean reversed, double profileMaxPositiveRate, double profileMaxNegativeRate, double initialPosition){
+    public CoolServo(HardwareMap hm, String name, boolean reversed, double profileMaxVelocity, double profileAcceleration, double profileDeceleration, double initialPosition){
         servo = hm.get(Servo.class, name);
         if(reversed) servo.setDirection(Servo.Direction.REVERSE);
-        profile = new AsymmetricMotionProfile(profileMaxPositiveRate, profileMaxNegativeRate);
+        profile = new AsymmetricMotionProfile(profileMaxVelocity, profileAcceleration, profileDeceleration);
         isProfiled = true;
         setInitialPosition(initialPosition);
     }
 
-    public CoolServo(HardwareMap hm, String name, boolean reversed, double profileMaxRate, double initialPosition){
-        this(hm, name, reversed, profileMaxRate, profileMaxRate, initialPosition);
+    public CoolServo(HardwareMap hm, String name, boolean reversed, double profileMaxVelocity, double profileAcceleration, double initialPosition){
+        this(hm, name, reversed, profileMaxVelocity, profileAcceleration, profileAcceleration, initialPosition);
     }
 
     private double cachedPosition, targetPosition;
@@ -38,12 +38,13 @@ public class CoolServo {
     public void setPosition(double position){
         if(position == targetPosition) return;
         targetPosition = position;
-        if(isProfiled) profile.setMotion(cachedPosition, targetPosition);
+        if(isProfiled) profile.setMotion(cachedPosition, targetPosition, profile.getSignedVelocity());
     }
 
     public void update(){
-        if(isProfiled && cachedPosition != profile.getProfilePosition()) {
-            cachedPosition = profile.getProfilePosition();
+        if(isProfiled && cachedPosition != profile.getPosition()) {
+            profile.update();
+            cachedPosition = profile.getPosition();
             servo.setPosition(cachedPosition);
         }
         if(!isProfiled && cachedPosition != targetPosition) {

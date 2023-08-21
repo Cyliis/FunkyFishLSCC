@@ -1,27 +1,49 @@
 package org.firstinspires.ftc.teamcode.Utils;
 
-public class Pose {
-    private Vector2d position;
-    private double heading;
+import com.acmerobotics.dashboard.config.Config;
 
-    public Pose(Vector2d position, double heading){
-        this.position = position;
+@Config
+public class Pose {
+    private final double x,y,heading;
+    private final double tolerance;
+    public static double defaultTolerance = 0.5;
+
+    public Pose(double x, double y, double heading, double tolerance){
+        this.x = x;
+        this.y = y;
         this.heading = heading;
+        this.tolerance = tolerance;
     }
 
-    public Vector2d getPosition() {
-        return position;
+    public Pose(double x, double y, double heading){
+        this(x, y, heading,defaultTolerance);
+    }
+
+    public Pose(){
+        this(0,0,0,defaultTolerance);
+    }
+
+    public double getX(){
+        return x;
+    }
+
+    public double getY() {
+        return y;
     }
 
     public double getHeading() {
         return heading;
     }
 
-    public void setPosition(Vector2d position) {
-        this.position = position;
+    public double getTolerance(){
+        return tolerance;
     }
 
-    public void setHeading(double heading) {
-        this.heading = heading;
+    public double getDistance(Pose other){
+        return Math.sqrt((other.getX() - x)*(other.getX() - x) + (other.getY() - y)*(other.getY() - y));
+    }
+
+    public boolean isReached(Pose other){
+        return getDistance(other) <= tolerance;
     }
 }
