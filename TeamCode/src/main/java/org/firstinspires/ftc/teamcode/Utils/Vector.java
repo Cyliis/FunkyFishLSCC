@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode.Utils;
 
 public class Vector {
-    private final double x,y,z;
+    private double x,y,z;
 
     public Vector(double x, double y, double z){
         this.x = x;
@@ -38,11 +38,28 @@ public class Vector {
         return z;
     }
 
+    public double getMagnitude(){
+        return Math.sqrt(x*x + y*y + z*z);
+    }
+
     public Vector plus(Vector other){
         return new Vector(x + other.getX(), y + other.getY(), z + other.getY());
     }
 
-    public Vector scale(double a){
+    public void scaleToMagnitude(double targetMagnitude){
+        double currentMagnitude = getMagnitude();
+        x/=currentMagnitude;
+        y/=currentMagnitude;
+        z/=currentMagnitude;
+    }
+
+    public void scaleBy(double a){
+        x = x * a;
+        y = y * a;
+        z = z * a;
+    }
+
+    public Vector scaledBy(double a){
         return new Vector(x * a, y * a, z * a);
     }
 }

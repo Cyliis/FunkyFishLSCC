@@ -1,13 +1,15 @@
-package org.firstinspires.ftc.teamcode.Utils;
+package org.firstinspires.ftc.teamcode.Math;
 
 import com.arcrobotics.ftclib.geometry.Vector2d;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 public class AsymmetricMotionProfile {
     private final double acceleration, deceleration;
     private final double maxVelocity;
     private double initialVelocity;
-    private double initialPosition, finalPosition;
+    public double initialPosition, finalPosition;
     private double deltaPose, sign;
     private double maxReachedVelocity;
     private double t0,t1,t2,t3,t;
@@ -15,7 +17,7 @@ public class AsymmetricMotionProfile {
 
     private double position, velocity, signedVelocity;
 
-    private final ElapsedTime timer = new ElapsedTime();
+    public final ElapsedTime timer = new ElapsedTime();
 
     public AsymmetricMotionProfile(double maxVelocity, double acceleration, double deceleration){
         this.maxVelocity = maxVelocity;
@@ -43,13 +45,13 @@ public class AsymmetricMotionProfile {
     }
 
     private double calculateDeltaIfMaxReachedVelocityIs(double v){
-        return (v*v/2.0)*(acceleration+deceleration)/acceleration*deceleration;
+        return (v*v/2.0)*(acceleration+deceleration)/(acceleration*deceleration);
     }
 
-    private int getPhase(){
+    public int getPhase(){
         if(timer.seconds() <= t1) return 1;
-        if(timer.seconds() <= t2) return 2;
-        if(timer.seconds() <= t3) return 3;
+        if(timer.seconds() <= t1+t2) return 2;
+        if(timer.seconds() <= t1+t2+t3) return 3;
         return 0;
     }
 
@@ -64,9 +66,9 @@ public class AsymmetricMotionProfile {
 
     private double getPosition(double time){
         if(time <= t1) return initialPosition + sign*v0*time/2.0 + sign*getVelocity(1,time)*time/2.0;
-        if(time <= t1+t2) return getPosition(t1) + sign*getVelocity(2, time)*(time-t1);
+        if(time <= t1+t2) return initialPosition + sign*v0*t1/2.0 + sign*getVelocity(1,t1)*t1/2.0 + sign*getVelocity(2, time)*(time-t1);
         if(time <= t1+t2+t3) return getPosition(t1+t2) + sign*maxReachedVelocity*t3/2.0 - sign*getVelocity(3, time) * (t1+t2+t3-time)/2.0;
-        return getPosition(t1+t2+t3);
+        return finalPosition;
     }
 
     private void updateVelocity(){
@@ -97,12 +99,30 @@ public class AsymmetricMotionProfile {
         return t - timer.seconds();
     }
 
+    public void telemetry(Telemetry telemetry){
+        telemetry.addData("Profile initial position", initialPosition);
+        telemetry.addData("Profile final position", finalPosition);
+        telemetry.addData("Profile initial velocity", initialVelocity);
+        telemetry.addData("Profile current velocity", velocity);
+        telemetry.addData("Plateau distance", calculateDeltaIfMaxReachedVelocityIs(maxVelocity));
+        telemetry.addData("Max Velocity", maxVelocity);
+        telemetry.addData("Max reached Velocity", maxReachedVelocity);
+        telemetry.addData("Acceleration", acceleration);
+        telemetry.addData("Deceleration", deceleration);
+        telemetry.addData("Delta pose", deltaPose);
+        telemetry.addData("t1", t1);
+        telemetry.addData("t2", t2);
+        telemetry.addData("t3", t3);
+        telemetry.addData("Phase", getPhase());
+        telemetry.addData("Time to motion end", getTimeToMotionEnd());
+    }
+
     public void update(){
         updateVelocity();
         updateSignedVelocity();
         updatePosition();
-        if(timer.seconds() >= t && position != finalPosition){
-            setMotion(position, finalPosition, signedVelocity);
-        }
+//        if(timer.seconds() > t && position != finalPosition){
+//            setMotion(position, finalPosition, signedVelocity);
+//        }
     }
 }

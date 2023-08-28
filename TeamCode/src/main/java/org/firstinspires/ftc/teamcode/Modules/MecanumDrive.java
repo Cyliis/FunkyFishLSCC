@@ -1,18 +1,16 @@
 package org.firstinspires.ftc.teamcode.Modules;
 
 import static java.lang.Math.PI;
-import static java.lang.Math.pow;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.arcrobotics.ftclib.controller.PIDController;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDCoefficients;
 
-import org.firstinspires.ftc.teamcode.Utils.CoolMotor;
+import org.firstinspires.ftc.teamcode.Wrappers.CoolMotor;
 import org.firstinspires.ftc.teamcode.Utils.IRobotModule;
 import org.firstinspires.ftc.teamcode.Utils.Pose;
-import org.firstinspires.ftc.teamcode.Utils.Trajectory;
 import org.firstinspires.ftc.teamcode.Utils.Vector;
 
 @Config
@@ -21,17 +19,20 @@ public class MecanumDrive implements IRobotModule {
     private final Localizer localizer;
 
     private final CoolMotor frontLeft, frontRight, backLeft, backRight;
-    public static String frontLeftMotorName = "fl", frontRightMotorName = "fr",
-    backLeftMotorName = "bl", backRightMotorName = "br";
+    public static String frontLeftMotorName = "mfl", frontRightMotorName = "mfr",
+            backLeftMotorName = "mbl", backRightMotorName = "mbr";
     public static boolean frontLeftMotorReversed = false, frontRightMotorReversed = true, backLeftMotorReversed = false, backRightMotorReversed = true;
 
-    public static PIDCoefficients translationalPID, headingPID;
-    private final PIDController tpid= new PIDController(0,0,0), hpid = new PIDController(0,0,0);
+    public static PIDCoefficients translationalPID = new PIDCoefficients(0.2,0,0),
+            headingPID = new PIDCoefficients(0,0,0);
+    public final PIDController tpid= new PIDController(0,0,0), hpid = new PIDController(0,0,0);
 
-    public static double lateralMultiplier = Math.sqrt(2);
+    public static double lateralMultiplier = 1.2;
+
+    public static double xDeceleration = 1, yDeceleration = 2;
 
     public enum RunMode{
-        PID, VECTOR
+        PID, Vector
     }
 
     private RunMode runMode;
@@ -42,27 +43,37 @@ public class MecanumDrive implements IRobotModule {
         frontRight = new CoolMotor(hm, frontRightMotorName, CoolMotor.RunMode.RUN, frontRightMotorReversed);
         backLeft = new CoolMotor(hm, backLeftMotorName, CoolMotor.RunMode.RUN, backLeftMotorReversed);
         backRight = new CoolMotor(hm, backRightMotorName, CoolMotor.RunMode.RUN, backRightMotorReversed);
+
+        frontLeft.setZeroPowerBehaviour(DcMotor.ZeroPowerBehavior.FLOAT);
+        frontRight.setZeroPowerBehaviour(DcMotor.ZeroPowerBehavior.FLOAT);
+        backLeft.setZeroPowerBehaviour(DcMotor.ZeroPowerBehavior.FLOAT);
+        backRight.setZeroPowerBehaviour(DcMotor.ZeroPowerBehavior.FLOAT);
+
         this.runMode = runMode;
     }
 
     public MecanumDrive(HardwareMap hm, Localizer localizer){
-        this(hm, localizer, RunMode.VECTOR);
+        this(hm, localizer, RunMode.Vector);
     }
 
-    private Vector powerVector = new Vector();
+    public Vector powerVector = new Vector();
     private Pose targetPose = new Pose();
-    private Vector targetVector = new Vector();
+    public Vector targetVector = new Vector();
 
     public void setTargetPose(Pose pose){
         this.targetPose = pose;
     }
 
-    public void setTargetVector(Vector vector){
-        this.targetVector = vector;
+    public void setTargetVector(Vector Vector){
+        this.targetVector = Vector;
     }
 
     public RunMode getRunMode() {
         return runMode;
+    }
+
+    public Localizer getLocalizer(){
+        return localizer;
     }
 
     public void setRunMode(RunMode runMode){
@@ -71,11 +82,11 @@ public class MecanumDrive implements IRobotModule {
 
     private void updatePowerVector(){
         switch (runMode){
-            case VECTOR:
-                powerVector = new Vector(targetVector.getX(), targetVector.getY() * lateralMultiplier * targetVector.getZ());
+            case Vector:
+                powerVector = new Vector(targetVector.getX(), targetVector.getY() * lateralMultiplier, targetVector.getZ());
                 break;
             case PID:
-                Pose currentPose = localizer.getPose();
+                Pose currentPose = localizer.getPoseEstimate();
 
                 double xDiff = targetPose.getX() - currentPose.getX();
                 double yDiff = targetPose.getY() - currentPose.getY();
@@ -88,19 +99,19 @@ public class MecanumDrive implements IRobotModule {
 
                 powerVector = new Vector(translationalPower * Math.cos(Math.atan2(yDiff, xDiff)), translationalPower * Math.sin(Math.atan2(yDiff, xDiff)), 0);
 
-                double headingDiff = targetPose.getHeading() - currentPose.getHeading();
+                double headingDiff = (targetPose.getHeading() - currentPose.getHeading()) % (2*PI);
 
-                while(headingDiff > PI) headingDiff -= PI;
-                while(headingDiff < -PI) headingDiff += PI;
+                if(headingDiff > PI) headingDiff -= 2.0*PI;
+                if(headingDiff < -PI) headingDiff += 2.0*PI;
 
                 hpid.setPID(headingPID.p, headingPID.i, headingPID.d);
 
                 double headingPower = hpid.calculate(0, headingDiff);
 
-                powerVector.plus(new Vector(0,0,headingPower));
+                powerVector= new Vector(powerVector.getX(),powerVector.getY(),headingPower);
                 break;
         }
-        powerVector.scale(Math.max(1, Math.abs(powerVector.getX()) + Math.abs(powerVector.getY()) + Math.abs(powerVector.getZ())));
+        powerVector.scaleBy(Math.max(1, Math.abs(powerVector.getX()) + Math.abs(powerVector.getY()) + Math.abs(powerVector.getZ())));
     }
 
     private void updateMotors(){
@@ -113,6 +124,10 @@ public class MecanumDrive implements IRobotModule {
         frontRight.update();
         backLeft.update();
         backRight.update();
+    }
+
+    public Pose getPoseEstimate(){
+        return localizer.getPoseEstimate();
     }
 
     @Override

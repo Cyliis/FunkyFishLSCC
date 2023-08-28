@@ -18,7 +18,7 @@ public class Localizer implements IRobotModule {
         this.pose = pose;
     }
 
-    public Pose getPose(){
+    public Pose getPoseEstimate(){
         return pose;
     }
 
