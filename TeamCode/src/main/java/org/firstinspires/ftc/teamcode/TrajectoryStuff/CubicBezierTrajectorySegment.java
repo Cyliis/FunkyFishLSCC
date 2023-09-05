@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.TrajectoryStuff;
 
 import com.acmerobotics.dashboard.config.Config;
 
+import org.firstinspires.ftc.teamcode.Math.Polynomial;
 import org.firstinspires.ftc.teamcode.Utils.Pose;
 import org.firstinspires.ftc.teamcode.Utils.Vector;
 
@@ -13,15 +14,9 @@ public class CubicBezierTrajectorySegment extends TrajectorySegment{
     private final Pose startPoint, endPoint;
     private final Pose controlPoint0, controlPoint1;
 
-    private double xa = 0, xb = 0, xc = 0, xd = 0;
-    private double ya = 0, yb = 0, yc = 0, yd = 0;
-    private double ha = 0, hb = 0, hc = 0, hd = 0;
-
-    private double dxa = 0, dxb = 0, dxc = 0;
-    private double dya = 0, dyb = 0, dyc = 0;
-
-    private double d2xa = 0, d2xb = 0;
-    private double d2ya = 0, d2yb = 0;
+    private Polynomial pX, pY, pH;
+    private Polynomial pdX, pdY;
+    private Polynomial pd2X, pd2Y;
 
     private double length = 0;
 
@@ -45,34 +40,30 @@ public class CubicBezierTrajectorySegment extends TrajectorySegment{
     }
 
     private void init(){
-        xa = endPoint.getX() - 3.0 * controlPoint1.getX() + 3.0 * controlPoint0.getX() - startPoint.getX();
-        xb = 3.0 * (controlPoint1.getX() - 2.0 * controlPoint0.getX() + startPoint.getX());
-        xc = 3.0 * (controlPoint0.getX() - startPoint.getX());
-        xd = startPoint.getX();
+        double xa = endPoint.getX() - 3.0 * controlPoint1.getX() + 3.0 * controlPoint0.getX() - startPoint.getX();
+        double xb = 3.0 * (controlPoint1.getX() - 2.0 * controlPoint0.getX() + startPoint.getX());
+        double xc = 3.0 * (controlPoint0.getX() - startPoint.getX());
+        double xd = startPoint.getX();
 
-        dxa = 3.0 * xa;
-        dxb = 2.0 * xb;
-        dxc = xc;
+        pX = new Polynomial(xa, xb, xc, xd);
+        pdX = pX.getDerivative();
+        pd2X = pdX.getDerivative();
 
-        d2xa = 2.0 * dxa;
-        d2xb = dxb;
+        double ya = endPoint.getY() - 3.0 * controlPoint1.getY() + 3.0 * controlPoint0.getY() - startPoint.getY();
+        double yb = 3.0 * (controlPoint1.getY() - 2.0 * controlPoint0.getY() + startPoint.getY());
+        double yc = 3.0 * (controlPoint0.getY() - startPoint.getY());
+        double yd = startPoint.getY();
 
-        ya = endPoint.getY() - 3.0 * controlPoint1.getY() + 3.0 * controlPoint0.getY() - startPoint.getY();
-        yb = 3.0 * (controlPoint1.getY() - 2.0 * controlPoint0.getY() + startPoint.getY());
-        yc = 3.0 * (controlPoint0.getY() - startPoint.getY());
-        yd = startPoint.getY();
+        pY = new Polynomial(ya, yb, yc, yd);
+        pdY = pY.getDerivative();
+        pd2Y = pdY.getDerivative();
 
-        dya = 3.0 * ya;
-        dyb = 2.0 * yb;
-        dyc = yc;
+        double ha = endPoint.getHeading() - 3.0 * controlPoint1.getHeading() + 3.0 * controlPoint0.getHeading() - startPoint.getHeading();
+        double hb = 3.0 * (controlPoint1.getHeading() - 2.0 * controlPoint0.getHeading() + startPoint.getHeading());
+        double hc = 3.0 * (controlPoint0.getHeading() - startPoint.getHeading());
+        double hd = startPoint.getHeading();
 
-        d2ya = 2.0 * dya;
-        d2yb = dyb;
-
-        ha = endPoint.getHeading() - 3.0 * controlPoint1.getHeading() + 3.0 * controlPoint0.getHeading() - startPoint.getHeading();
-        hb = 3.0 * (controlPoint1.getHeading() - 2.0 * controlPoint0.getHeading() + startPoint.getHeading());
-        hc = 3.0 * (controlPoint0.getHeading() - startPoint.getHeading());
-        hd = startPoint.getHeading();
+        pH = new Polynomial(ha, hb, hc, hd);
 
         computeLength();
     }
@@ -83,8 +74,8 @@ public class CubicBezierTrajectorySegment extends TrajectorySegment{
         for(double d = 0; d <= 1; d += dt) {
             lengthArray.add(length);
 
-            dx = d*d*dxa + d*dxb + dxc;
-            dy = d*d*dya + d*dyb + dyc;
+            dx = pdX.evaluate(d);
+            dy = pdY.evaluate(d);
 
             length+=Math.sqrt(dx*dx + dy*dy)*dt;
         }
@@ -92,17 +83,16 @@ public class CubicBezierTrajectorySegment extends TrajectorySegment{
 
     @Override
     public Vector getTangentVelocity(double t) {
-        Vector ans = new Vector(dxa * t*t + dxb * t + dxc, dya * t*t + dyb * t + dyc);
-        ans.scaleToMagnitude(1);
+        Vector ans = new Vector(pdX.evaluate(t), pdY.evaluate(t)).scaledToMagnitude(1);
         return ans;
     }
 
     @Override
     public double getCurvature(double t) {
-        double dx = dxa * t*t + dxb + t + dxc;
-        double dy = dya * t*t + dyb + t + dyc;
-        double d2x = d2xa * t + d2xb;
-        double d2y = d2ya * t + d2yb;
+        double dx = pdX.evaluate(t);
+        double dy = pdY.evaluate(t);
+        double d2x = pd2X.evaluate(t);
+        double d2y = pd2Y.evaluate(t);
 
         return (dx * d2y - d2x * dy) /
                 (Math.sqrt(Math.pow(dx * dx  + dy * dy,3)));
@@ -110,9 +100,7 @@ public class CubicBezierTrajectorySegment extends TrajectorySegment{
 
     @Override
     public Pose getPose(double t) {
-        return new Pose(xa * t*t*t + xb * t*t + xc * t + xd,
-                ya * t*t*t + yb * t*t + yc * t + yd,
-                ha * t*t*t + hb * t*t + hc * t + hd);
+        return new Pose(pX.evaluate(t), pY.evaluate(t), pH.evaluate(t));
     }
 
     @Override
@@ -127,9 +115,9 @@ public class CubicBezierTrajectorySegment extends TrajectorySegment{
 
     @Override
     public double getLengthAt(double t) {
-        int index = (int)(t * (1.0/(double)resolution));
-        index = Math.min(resolution, Math.max(0,index));
-        return lengthArray.get(index) + (lengthArray.get(Math.min(resolution, index + 1)) - lengthArray.get(index)) * (t - 1.0/(double)index);
+        int index = (int)(t * (double)resolution);
+        index = Math.min(resolution - 1, Math.max(0,index));
+        return lengthArray.get(index) + (lengthArray.get(Math.min(resolution - 1, index + 1)) - lengthArray.get(index)) * 0.5;
     }
 
     @Override

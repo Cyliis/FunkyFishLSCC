@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.Modules;
 
 import static java.lang.Math.PI;
+import static java.lang.Math.pow;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.arcrobotics.ftclib.controller.PIDController;
@@ -23,13 +24,11 @@ public class MecanumDrive implements IRobotModule {
             backLeftMotorName = "mbl", backRightMotorName = "mbr";
     public static boolean frontLeftMotorReversed = false, frontRightMotorReversed = true, backLeftMotorReversed = false, backRightMotorReversed = true;
 
-    public static PIDCoefficients translationalPID = new PIDCoefficients(0.2,0,0),
-            headingPID = new PIDCoefficients(0,0,0);
-    public final PIDController tpid= new PIDController(0,0,0), hpid = new PIDController(0,0,0);
+    public static PIDCoefficients translationalPID = new PIDCoefficients(0.15,0.05,0.005),
+            headingPID = new PIDCoefficients(1.5,0.2,0.2);
+    public final PIDController tpid= new PIDController(0,0,0), hpid = new PIDController(1.5,0.2,0.05);
 
     public static double lateralMultiplier = 1.2;
-
-    public static double xDeceleration = 1, yDeceleration = 2;
 
     public enum RunMode{
         PID, Vector
@@ -95,9 +94,10 @@ public class MecanumDrive implements IRobotModule {
 
                 tpid.setPID(translationalPID.p, translationalPID.i, translationalPID.d);
 
-                double translationalPower = tpid.calculate(0, distance);
+                double translationalPower = tpid.calculate(-distance, 0);
 
-                powerVector = new Vector(translationalPower * Math.cos(Math.atan2(yDiff, xDiff)), translationalPower * Math.sin(Math.atan2(yDiff, xDiff)), 0);
+                powerVector = new Vector(translationalPower * Math.cos(Math.atan2(yDiff, xDiff)), translationalPower * Math.sin(Math.atan2(yDiff, xDiff)));
+                powerVector = Vector.rotateBy(powerVector, currentPose.getHeading());
 
                 double headingDiff = (targetPose.getHeading() - currentPose.getHeading()) % (2*PI);
 
@@ -106,7 +106,7 @@ public class MecanumDrive implements IRobotModule {
 
                 hpid.setPID(headingPID.p, headingPID.i, headingPID.d);
 
-                double headingPower = hpid.calculate(0, headingDiff);
+                double headingPower = hpid.calculate(-headingDiff, 0);
 
                 powerVector= new Vector(powerVector.getX(),powerVector.getY(),headingPower);
                 break;

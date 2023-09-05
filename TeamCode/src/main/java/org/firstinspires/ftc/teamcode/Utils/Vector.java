@@ -17,6 +17,12 @@ public class Vector {
         this(0,0,0);
     }
 
+    public Vector(Vector otherVector){
+        this.x = otherVector.x;
+        this.y = otherVector.y;
+        this.z = otherVector.z;
+    }
+
     public static Vector fromAngleAndMagnitude(double t, double m){
         return new Vector(m*Math.cos(t), m*Math.sin(t));
     }
@@ -48,9 +54,9 @@ public class Vector {
 
     public void scaleToMagnitude(double targetMagnitude){
         double currentMagnitude = getMagnitude();
-        x/=currentMagnitude;
-        y/=currentMagnitude;
-        z/=currentMagnitude;
+        x=x/currentMagnitude*targetMagnitude;
+        y=y/currentMagnitude*targetMagnitude;
+        z=z/currentMagnitude*targetMagnitude;
     }
 
     public void scaleBy(double a){
@@ -61,5 +67,15 @@ public class Vector {
 
     public Vector scaledBy(double a){
         return new Vector(x * a, y * a, z * a);
+    }
+
+    public Vector scaledToMagnitude(double targetMagnitude){
+        Vector aux = new Vector(this);
+        aux.scaleToMagnitude(targetMagnitude);
+        return aux;
+    }
+
+    public static Vector rotateBy(Vector vector, double theta){
+        return new Vector(Math.cos(theta) * vector.getX() + Math.sin(theta) * vector.getY(), Math.cos(theta) * vector.getY() - Math.sin(theta) * vector.getX());
     }
 }
