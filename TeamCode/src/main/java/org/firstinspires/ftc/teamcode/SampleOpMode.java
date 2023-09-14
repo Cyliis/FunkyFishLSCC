@@ -6,9 +6,7 @@ import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.hardware.lynx.LynxModule;
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -23,7 +21,7 @@ import org.firstinspires.ftc.teamcode.Utils.Pose;
 import java.util.List;
 
 @Config
-@Autonomous(name = "Sample")
+@TeleOp(name = "Sample")
 public class SampleOpMode extends LinearOpMode {
     List<LynxModule> hubs;
 
@@ -33,12 +31,16 @@ public class SampleOpMode extends LinearOpMode {
 
     FtcDashboard dash;
 
-    CubicBezierTrajectorySegment forwardSegment = new CubicBezierTrajectorySegment(
+    CubicBezierTrajectorySegment segment1 = new CubicBezierTrajectorySegment(
             new Pose(0,0,0),
-            new Pose(0,-20,0),
-            new Pose(36,30,0),
-            new Pose(36,10,0)
+            new Pose(96,0,PI/2.0),
+            new Pose(0,48,PI/2.0),
+            new Pose(96,48,0)
     );
+
+    CubicBezierTrajectorySegment segment2 = new CubicBezierTrajectorySegment(segment1,
+            new Pose(48,48,0),
+            new Pose(96,48,0));
 
     CubicBezierTrajectorySegment rotationSegment = new CubicBezierTrajectorySegment(
             new Pose(0,0,0),
@@ -47,7 +49,7 @@ public class SampleOpMode extends LinearOpMode {
             new Pose(0,0, PI)
     );
 
-    Trajectory forward = new TrajectoryBuilder(forwardSegment).build(),
+    Trajectory lol = new TrajectoryBuilder(segment1).build(),
             rotate = new TrajectoryBuilder(rotationSegment).build();
 
     @Override
@@ -60,7 +62,7 @@ public class SampleOpMode extends LinearOpMode {
         localizer = new Localizer(hardwareMap, new Pose());
         drive = new MecanumDrive(hardwareMap, localizer);
         follower = new Follower(drive, localizer);
-        follower.setTrajectory(forward, 2);
+        follower.setTrajectory(lol, 10);
 
         hubs = hardwareMap.getAll(LynxModule.class);
         for(LynxModule hub:hubs) {
@@ -85,8 +87,15 @@ public class SampleOpMode extends LinearOpMode {
             telemetry.addData("loops", loops);
             telemetry.addData("followed trajectory length",follower.getTrajectory().getLength());
             telemetry.addData("followed point", follower.currentFollowedPoint);
+            telemetry.addData("correcting vector", follower.correctingVector);
             telemetry.addData("loops/sec", 1.0/loopTimer.seconds());
             telemetry.addData("drive mode", drive.getRunMode());
+            telemetry.addData("target vector", drive.targetVector);
+            telemetry.addData("power vector", drive.powerVector);
+            telemetry.addData("current length", follower.getTrajectory().getLengthAt(follower.currentFollowedPoint));
+            telemetry.addData("current Tangent Velocity", follower.tangentVelocityVector);
+            telemetry.addData("current position", localizer.getPoseEstimate());
+            telemetry.addData("followed point", follower.getTrajectory().getFollowedPoint(localizer.getPoseEstimate(), follower.currentFollowedPoint));
             telemetry.update();
             loopTimer.reset();
         }

@@ -43,4 +43,8 @@ public class Polynomial {
     public int getGrade(){
         return coefficients.size()-1;
     }
+
+    public ArrayList<Double> getCoefficients(){
+        return coefficients;
+    }
 }

@@ -46,4 +46,9 @@ public class Pose {
     public boolean isReached(Pose other){
         return getDistance(other) <= tolerance;
     }
+
+    @Override
+    public String toString(){
+        return String.valueOf(x) + " " + String.valueOf(y) + " " + String.valueOf(heading);
+    }
 }

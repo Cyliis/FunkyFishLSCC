@@ -49,14 +49,13 @@ public class Vector {
     }
 
     public Vector plus(Vector other){
-        return new Vector(x + other.getX(), y + other.getY(), z + other.getY());
+        return new Vector(x + other.getX(), y + other.getY(), z + other.getZ());
     }
 
     public void scaleToMagnitude(double targetMagnitude){
         double currentMagnitude = getMagnitude();
-        x=x/currentMagnitude*targetMagnitude;
-        y=y/currentMagnitude*targetMagnitude;
-        z=z/currentMagnitude*targetMagnitude;
+        scaleBy(1.0/currentMagnitude);
+        scaleBy(targetMagnitude);
     }
 
     public void scaleBy(double a){
@@ -77,5 +76,10 @@ public class Vector {
 
     public static Vector rotateBy(Vector vector, double theta){
         return new Vector(Math.cos(theta) * vector.getX() + Math.sin(theta) * vector.getY(), Math.cos(theta) * vector.getY() - Math.sin(theta) * vector.getX());
+    }
+
+    @Override
+    public String toString(){
+        return String.valueOf(x) + " " + String.valueOf(y) + " " + String.valueOf(z);
     }
 }

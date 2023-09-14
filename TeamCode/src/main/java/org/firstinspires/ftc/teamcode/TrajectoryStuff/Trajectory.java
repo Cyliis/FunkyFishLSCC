@@ -69,17 +69,26 @@ public class Trajectory {
     //and the first derivative is equal to 0 would yield the same result, sadly the first derivative is a 5th grade polynomial
     //so I haven't found a good way to calculate or approximate roots
     public double getFollowedPoint(Pose currentPose, double currentFollowedPoint){
-        int numberOfGeneratedPoints = (int) length * Follower.segmentsPerUnit;
-        double step = 1.0/(double)numberOfGeneratedPoints;
+        if(currentFollowedPoint == 1) return 1;
 
-        for(double a = currentFollowedPoint; a <= 1.0; a += step){
-            double currentDistance = getDistanceFromPoint(currentPose, a);
-            if(getDistanceFromPoint(currentPose,a - step) >= currentDistance && getDistanceFromPoint(currentPose, a + step) >= currentDistance){
-                return a;
+        ArrayList<Double> valleys = new ArrayList<>();
+
+        double minDist = Double.POSITIVE_INFINITY, closestPoint = Double.POSITIVE_INFINITY;
+
+        for(int i = 0;i < numberOfSegments; i++){
+            valleys=segments.get(i).getClosePoints(currentPose);
+            for(int j = 0;j < valleys.size(); j++){
+                System.out.println(valleys.get(j));
+                if(Math.abs(valleys.get(j) - currentFollowedPoint) < minDist) {
+                    minDist = Math.abs(valleys.get(j) - currentFollowedPoint);
+                    closestPoint = ((double)i + valleys.get(j))/(double) numberOfSegments;
+                }
             }
         }
 
-        return currentFollowedPoint;
+        if(closestPoint == Double.POSITIVE_INFINITY) return currentFollowedPoint;
+        return closestPoint;
     }
 
 }
+

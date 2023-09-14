@@ -24,7 +24,7 @@ public class MecanumDrive implements IRobotModule {
             backLeftMotorName = "mbl", backRightMotorName = "mbr";
     public static boolean frontLeftMotorReversed = false, frontRightMotorReversed = true, backLeftMotorReversed = false, backRightMotorReversed = true;
 
-    public static PIDCoefficients translationalPID = new PIDCoefficients(0.15,0.05,0.005),
+    public static PIDCoefficients translationalPID = new PIDCoefficients(0.15,0.05,0.02),
             headingPID = new PIDCoefficients(1.5,0.2,0.2);
     public final PIDController tpid= new PIDController(0,0,0), hpid = new PIDController(1.5,0.2,0.05);
 
@@ -83,6 +83,8 @@ public class MecanumDrive implements IRobotModule {
         switch (runMode){
             case Vector:
                 powerVector = new Vector(targetVector.getX(), targetVector.getY() * lateralMultiplier, targetVector.getZ());
+                powerVector = Vector.rotateBy(powerVector, localizer.getPoseEstimate().getHeading());
+                powerVector = new Vector(powerVector.getX(), powerVector.getY(), targetVector.getZ());
                 break;
             case PID:
                 Pose currentPose = localizer.getPoseEstimate();
@@ -111,7 +113,8 @@ public class MecanumDrive implements IRobotModule {
                 powerVector= new Vector(powerVector.getX(),powerVector.getY(),headingPower);
                 break;
         }
-        powerVector.scaleBy(Math.max(1, Math.abs(powerVector.getX()) + Math.abs(powerVector.getY()) + Math.abs(powerVector.getZ())));
+        if(Math.abs(powerVector.getX()) + Math.abs(powerVector.getY()) + Math.abs(powerVector.getZ()) > 1)
+            powerVector.scaleToMagnitude(1);
     }
 
     private void updateMotors(){

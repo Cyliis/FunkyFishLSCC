@@ -1,12 +1,11 @@
 package org.firstinspires.ftc.teamcode.Math;
-
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 
 public class SixthDegreePolynomialMagic {
-    public static double[] getFirstValley(Polynomial polynomial, double leftBound, double rightBound) throws Exception {
-        if(polynomial.getGrade()!=6) throw new Exception("Wrong degree polynomial");
+    public static double[] getFirstValley(Polynomial polynomial, double leftBound, double rightBound) {
 
         Polynomial secondDerivative = polynomial.getDerivative().getDerivative();
 
@@ -25,7 +24,7 @@ public class SixthDegreePolynomialMagic {
 
         inflectionPointsWithinBounds.add(rightBound);
 
-        inflectionPointsWithinBounds.sort(Comparator.naturalOrder());
+        Collections.sort(inflectionPointsWithinBounds);
 
         for (int i = 0;i<inflectionPointsWithinBounds.size()-1;i++){
 
@@ -41,6 +40,48 @@ public class SixthDegreePolynomialMagic {
         }
 
         return null;
+    }
+
+    public static ArrayList<Double> getAllValleys(Polynomial polynomial, double leftBound, double rightBound) {
+
+        Polynomial secondDerivative = polynomial.getDerivative().getDerivative();
+
+        double[] inflectionPoints = solveQuartic(secondDerivative.getCoefficient(4),
+                secondDerivative.getCoefficient(3), secondDerivative.getCoefficient(2),
+                secondDerivative.getCoefficient(1), secondDerivative.getCoefficient(0));
+
+        ArrayList<Double> inflectionPointsWithinBounds = new ArrayList<>();
+
+        inflectionPointsWithinBounds.add(leftBound);
+
+        ArrayList<Double> valleys = new ArrayList<>();
+
+        if(inflectionPoints != null) {
+            for (int i = 0; i < inflectionPoints.length; i++) {
+                if (inflectionPoints[i] < leftBound || inflectionPoints[i] > rightBound) continue;
+                inflectionPointsWithinBounds.add(inflectionPoints[i]);
+            }
+        }
+
+        inflectionPointsWithinBounds.add(rightBound);
+
+        Collections.sort(inflectionPointsWithinBounds);
+//        System.out.println(inflectionPointsWithinBounds);
+
+        for (int i = 0;i<inflectionPointsWithinBounds.size()-1;i++){
+
+            double midPoint = (inflectionPointsWithinBounds.get(i) + inflectionPointsWithinBounds.get(i+1))/2.0;
+            if(secondDerivative.evaluate(midPoint) <= 0) continue;
+
+            double possibleValley = convexTernarySearch(inflectionPointsWithinBounds.get(i),
+                    inflectionPointsWithinBounds.get(i+1), polynomial);
+
+            if(secondDerivative.evaluate(possibleValley) <= 0) continue;
+
+            valleys.add(possibleValley);
+        }
+
+        return valleys;
     }
 
     private static double[] solveQuartic(double a, double b, double c, double d, double e) {
