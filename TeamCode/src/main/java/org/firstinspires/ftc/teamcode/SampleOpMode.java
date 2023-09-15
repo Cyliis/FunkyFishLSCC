@@ -13,6 +13,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.Modules.Follower;
 import org.firstinspires.ftc.teamcode.Modules.Localizer;
 import org.firstinspires.ftc.teamcode.Modules.MecanumDrive;
+import org.firstinspires.ftc.teamcode.TrajectoryStuff.CubicBezierTangentHeadingTrajectorySegment;
 import org.firstinspires.ftc.teamcode.TrajectoryStuff.CubicBezierTrajectorySegment;
 import org.firstinspires.ftc.teamcode.TrajectoryStuff.Trajectory;
 import org.firstinspires.ftc.teamcode.TrajectoryStuff.TrajectoryBuilder;
@@ -31,26 +32,26 @@ public class SampleOpMode extends LinearOpMode {
 
     FtcDashboard dash;
 
-    CubicBezierTrajectorySegment segment1 = new CubicBezierTrajectorySegment(
+    CubicBezierTangentHeadingTrajectorySegment segment1 = new CubicBezierTangentHeadingTrajectorySegment(
             new Pose(0,0,0),
-            new Pose(96,0,PI/2.0),
-            new Pose(0,48,PI/2.0),
-            new Pose(96,48,0)
+            new Pose(48,0,0),
+            new Pose(72,0,0),
+            new Pose(48,-48,-PI/2)
     );
 
-    CubicBezierTrajectorySegment segment2 = new CubicBezierTrajectorySegment(segment1,
-            new Pose(48,48,0),
-            new Pose(96,48,0));
-
-    CubicBezierTrajectorySegment rotationSegment = new CubicBezierTrajectorySegment(
-            new Pose(0,0,0),
-            new Pose(0,0,0),
-            new Pose(0,0, PI),
-            new Pose(0,0, PI)
+    CubicBezierTangentHeadingTrajectorySegment segment2 = new CubicBezierTangentHeadingTrajectorySegment(segment1,
+            new Pose(24,-48,0),
+            new Pose(72,-48,0)
     );
 
-    Trajectory lol = new TrajectoryBuilder(segment1).build(),
-            rotate = new TrajectoryBuilder(rotationSegment).build();
+    CubicBezierTangentHeadingTrajectorySegment segment3 = new CubicBezierTangentHeadingTrajectorySegment(segment1,
+            new Pose(72,0,0),
+            new Pose(72,-12,0)
+    );
+
+    Trajectory lol = new TrajectoryBuilder(segment1)
+//            .addSegment(segment2)
+            .build();
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -62,7 +63,7 @@ public class SampleOpMode extends LinearOpMode {
         localizer = new Localizer(hardwareMap, new Pose());
         drive = new MecanumDrive(hardwareMap, localizer);
         follower = new Follower(drive, localizer);
-        follower.setTrajectory(lol, 10);
+        follower.setTrajectory(lol, 0.1);
 
         hubs = hardwareMap.getAll(LynxModule.class);
         for(LynxModule hub:hubs) {

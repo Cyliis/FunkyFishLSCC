@@ -15,7 +15,7 @@ import org.firstinspires.ftc.teamcode.Utils.Vector;
 public class Follower implements IRobotModule {
 
 
-    public static double followingCoefficient = 1, correctionCoefficient = 1, centripetalCorrectionCoefficient = 6, headingPIDCoefficient = 1;
+    public static double followingCoefficient = 1, correctionCoefficient = 1, centripetalCorrectionCoefficient = 1, headingPIDCoefficient = 1;
     public static int segmentsPerUnit = 100;
 
     private final MecanumDrive drive;

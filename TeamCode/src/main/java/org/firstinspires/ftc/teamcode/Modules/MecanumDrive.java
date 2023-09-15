@@ -25,7 +25,7 @@ public class MecanumDrive implements IRobotModule {
     public static boolean frontLeftMotorReversed = false, frontRightMotorReversed = true, backLeftMotorReversed = false, backRightMotorReversed = true;
 
     public static PIDCoefficients translationalPID = new PIDCoefficients(0.15,0.05,0.02),
-            headingPID = new PIDCoefficients(1.5,0.2,0.2);
+            headingPID = new PIDCoefficients(2,0.3,0.2);
     public final PIDController tpid= new PIDController(0,0,0), hpid = new PIDController(1.5,0.2,0.05);
 
     public static double lateralMultiplier = 1.2;

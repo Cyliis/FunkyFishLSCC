@@ -10,12 +10,12 @@ import org.firstinspires.ftc.teamcode.Utils.Vector;
 import java.util.ArrayList;
 
 @Config
-public class CubicBezierTrajectorySegment extends TrajectorySegment {
+public class CubicBezierTangentHeadingTrajectorySegment extends TrajectorySegment {
 
     private final Pose startPoint, endPoint;
     private final Pose controlPoint0, controlPoint1;
 
-    public Polynomial pX, pY, pH;
+    public Polynomial pX, pY;
     public Polynomial pdX, pdY;
     public Polynomial pd2X, pd2Y;
 
@@ -25,7 +25,9 @@ public class CubicBezierTrajectorySegment extends TrajectorySegment {
 
     private ArrayList<Double> lengthArray = new ArrayList<>();
 
-    public CubicBezierTrajectorySegment(Pose startPoint, Pose controlPoint0, Pose controlPoint1, Pose endPoint){
+    public double tangentHeadingOffset = 0;
+
+    public CubicBezierTangentHeadingTrajectorySegment(Pose startPoint, Pose controlPoint0, Pose controlPoint1, Pose endPoint){
         this.startPoint = startPoint;
         this.controlPoint0 = controlPoint0;
         this.controlPoint1 = controlPoint1;
@@ -33,7 +35,7 @@ public class CubicBezierTrajectorySegment extends TrajectorySegment {
         init();
     }
 
-    public CubicBezierTrajectorySegment(CubicBezierTrajectorySegment previousCurve, Pose controlPoint1, Pose endPoint){
+    public CubicBezierTangentHeadingTrajectorySegment(CubicBezierTangentHeadingTrajectorySegment previousCurve, Pose controlPoint1, Pose endPoint){
         this.startPoint = previousCurve.endPoint;
         this.controlPoint0 = new Pose(previousCurve.endPoint.getX() + (previousCurve.endPoint.getX() - previousCurve.controlPoint1.getX()),
                 previousCurve.endPoint.getY() + (previousCurve.endPoint.getY() - previousCurve.controlPoint1.getY()), previousCurve.controlPoint1.getHeading());
@@ -60,13 +62,6 @@ public class CubicBezierTrajectorySegment extends TrajectorySegment {
         pY = new Polynomial(ya, yb, yc, yd);
         pdY = pY.getDerivative();
         pd2Y = pdY.getDerivative();
-
-        double ha = endPoint.getHeading() - 3.0 * controlPoint1.getHeading() + 3.0 * controlPoint0.getHeading() - startPoint.getHeading();
-        double hb = 3.0 * (controlPoint1.getHeading() - 2.0 * controlPoint0.getHeading() + startPoint.getHeading());
-        double hc = 3.0 * (controlPoint0.getHeading() - startPoint.getHeading());
-        double hd = startPoint.getHeading();
-
-        pH = new Polynomial(ha, hb, hc, hd);
 
         computeLength();
     }
@@ -101,7 +96,7 @@ public class CubicBezierTrajectorySegment extends TrajectorySegment {
 
     public Pose getPose(double t) {
         if(t==1) return endPoint;
-        return new Pose(pX.evaluate(t), pY.evaluate(t), pH.evaluate(t));
+        return new Pose(pX.evaluate(t), pY.evaluate(t), Math.atan2(getTangentVelocity(t).getY(), getTangentVelocity(t).getX()) + tangentHeadingOffset);
     }
 
     public double getHeading(double t) {
