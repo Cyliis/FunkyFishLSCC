@@ -15,7 +15,7 @@ import org.firstinspires.ftc.teamcode.Utils.Vector;
 public class Follower implements IRobotModule {
 
 
-    public static double followingCoefficient = 1, correctionCoefficient = 1, centripetalCorrectionCoefficient = 1, headingPIDCoefficient = 1;
+    public static double followingCoefficient = 1, correctionCoefficient = 1, centripetalCorrectionCoefficient = 21, headingPIDCoefficient = 1;
     public static int segmentsPerUnit = 100;
 
     private final MecanumDrive drive;
@@ -61,7 +61,7 @@ public class Follower implements IRobotModule {
         if(trajectory == null) return;
         if(pid) return;
 
-        if(trajectory.getLength() - trajectory.getLengthAt(currentFollowedPoint) <= PIDThreshold){
+        if(trajectory.getLength() - trajectory.getLengthAt(currentFollowedPoint) <= drive.getLocalizer().glideDelta.getMagnitude()){
             pid = true;
             drive.setRunMode(MecanumDrive.RunMode.PID);
             drive.setTargetPose(trajectory.getPose(1));

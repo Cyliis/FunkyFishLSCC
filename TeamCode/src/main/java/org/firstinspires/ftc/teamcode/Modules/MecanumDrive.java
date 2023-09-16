@@ -17,7 +17,7 @@ import org.firstinspires.ftc.teamcode.Utils.Vector;
 @Config
 public class MecanumDrive implements IRobotModule {
 
-    private final Localizer localizer;
+    private final PredictiveLocalizer localizer;
 
     private final CoolMotor frontLeft, frontRight, backLeft, backRight;
     public static String frontLeftMotorName = "mfl", frontRightMotorName = "mfr",
@@ -37,7 +37,7 @@ public class MecanumDrive implements IRobotModule {
     private RunMode runMode;
 
     public MecanumDrive(HardwareMap hm, Localizer localizer, RunMode runMode){
-        this.localizer = localizer;
+        this.localizer = new PredictiveLocalizer(localizer);
         frontLeft = new CoolMotor(hm, frontLeftMotorName, CoolMotor.RunMode.RUN, frontLeftMotorReversed);
         frontRight = new CoolMotor(hm, frontRightMotorName, CoolMotor.RunMode.RUN, frontRightMotorReversed);
         backLeft = new CoolMotor(hm, backLeftMotorName, CoolMotor.RunMode.RUN, backLeftMotorReversed);
@@ -71,7 +71,7 @@ public class MecanumDrive implements IRobotModule {
         return runMode;
     }
 
-    public Localizer getLocalizer(){
+    public PredictiveLocalizer getLocalizer(){
         return localizer;
     }
 
@@ -135,6 +135,7 @@ public class MecanumDrive implements IRobotModule {
 
     @Override
     public void update() {
+        localizer.update();
         updatePowerVector();
         updateMotors();
     }

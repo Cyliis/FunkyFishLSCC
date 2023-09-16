@@ -79,7 +79,7 @@ public class Trajectory {
             valleys=segments.get(i).getClosePoints(currentPose);
             for(int j = 0;j < valleys.size(); j++){
 //                System.out.println(valleys.get(j));
-                if(Math.abs(((valleys.get(j)+i)*(1f/(float)numberOfSegments)) - currentFollowedPoint) < minDist && ((valleys.get(j)+i)*(1f/(float)numberOfSegments)) >= currentFollowedPoint) {
+                if(Math.abs(((valleys.get(j)+i)*(1f/(float)numberOfSegments)) - currentFollowedPoint) < minDist) {
                     minDist = Math.abs(valleys.get(j) - currentFollowedPoint);
                     closestPoint = ((double)i + valleys.get(j))/(double) numberOfSegments;
                 }

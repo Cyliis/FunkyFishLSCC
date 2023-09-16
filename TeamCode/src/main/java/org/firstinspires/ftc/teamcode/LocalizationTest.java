@@ -51,6 +51,9 @@ public class LocalizationTest extends LinearOpMode {
             telemetry.addData("Pose X", localizer.getPoseEstimate().getX());
             telemetry.addData("Pose Y", localizer.getPoseEstimate().getY());
             telemetry.addData("Pose Heading", localizer.getPoseEstimate().getHeading());
+            telemetry.addData("velocity", drive.getLocalizer().getVelocity());
+            telemetry.addData("predicted glide X", drive.getLocalizer().glideDelta.getX());
+            telemetry.addData("predicted glide Y", drive.getLocalizer().glideDelta.getY());
             telemetry.update();
         }
     }

@@ -11,7 +11,7 @@ import org.firstinspires.ftc.teamcode.drive.FunnyLocalizer;
 
 @Config
 public class Localizer implements IRobotModule {
-    private Pose pose;
+    protected Pose pose;
     private FunnyLocalizer localizer;
     public CoolIMU imu;
 

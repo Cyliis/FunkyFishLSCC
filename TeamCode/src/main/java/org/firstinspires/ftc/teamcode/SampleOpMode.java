@@ -35,18 +35,8 @@ public class SampleOpMode extends LinearOpMode {
     CubicBezierTangentHeadingTrajectorySegment segment1 = new CubicBezierTangentHeadingTrajectorySegment(
             new Pose(0,0,0),
             new Pose(48,0,0),
-            new Pose(72,0,0),
-            new Pose(48,-48,-PI/2)
-    );
-
-    CubicBezierTangentHeadingTrajectorySegment segment2 = new CubicBezierTangentHeadingTrajectorySegment(segment1,
-            new Pose(24,-48,0),
-            new Pose(72,-48,0)
-    );
-
-    CubicBezierTangentHeadingTrajectorySegment segment3 = new CubicBezierTangentHeadingTrajectorySegment(segment1,
-            new Pose(72,0,0),
-            new Pose(72,-12,0)
+            new Pose(48,-24,0),
+            new Pose(96,-24,0)
     );
 
     Trajectory lol = new TrajectoryBuilder(segment1)
@@ -63,7 +53,7 @@ public class SampleOpMode extends LinearOpMode {
         localizer = new Localizer(hardwareMap, new Pose());
         drive = new MecanumDrive(hardwareMap, localizer);
         follower = new Follower(drive, localizer);
-        follower.setTrajectory(lol, 0.1);
+        follower.setTrajectory(lol, 2);
 
         hubs = hardwareMap.getAll(LynxModule.class);
         for(LynxModule hub:hubs) {
