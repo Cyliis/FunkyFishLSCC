@@ -21,6 +21,16 @@ public class CoolEncoder {
         this.reversed = false;
     }
 
+    public CoolEncoder(DcMotorEx motor, boolean reversed){
+        this.motor = motor;
+        this.reversed = reversed;
+    }
+
+    public CoolEncoder(DcMotorEx motor){
+        this.motor = motor;
+        this.reversed = false;
+    }
+
     public int getCurrentPosition(){
         if(reversed && motor.getDirection() == DcMotorSimple.Direction.FORWARD) return -(motor.getCurrentPosition() - offset);
         return motor.getCurrentPosition() - offset;

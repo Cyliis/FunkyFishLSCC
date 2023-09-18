@@ -9,7 +9,7 @@ import org.firstinspires.ftc.teamcode.Utils.Vector;
 
 @Config
 public class PredictiveLocalizer {
-    public static double xDeceleration = 70, yDeceleration = 200;
+    public static double xDeceleration = 100, yDeceleration = 300;
     private Vector velocity = new Vector(0,0,0);
     public Vector glideDelta = new Vector(0,0,0);
     private Pose lastPose = new Pose(0,0,0);

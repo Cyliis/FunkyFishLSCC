@@ -15,7 +15,7 @@ public class CoolMotor {
         RUN, PID;
     }
 
-    private final DcMotorEx motor;
+    public final DcMotorEx motor;
 
     private final PIDController pidController = new PIDController(0,0,0);
     private PIDCoefficients pidCoefficients = new PIDCoefficients(0,0,0);

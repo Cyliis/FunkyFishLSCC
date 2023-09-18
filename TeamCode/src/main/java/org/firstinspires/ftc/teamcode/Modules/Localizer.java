@@ -2,6 +2,8 @@ package org.firstinspires.ftc.teamcode.Modules;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.Utils.IRobotModule;
@@ -19,6 +21,13 @@ public class Localizer implements IRobotModule {
         this.pose = initialPose;
         this.imu = new CoolIMU(hm);
         this.localizer = new FunnyLocalizer(hm, imu);
+        localizer.setPoseEstimate(new Pose2d(initialPose.getX(), initialPose.getY(), initialPose.getHeading()));
+    }
+
+    public Localizer(HardwareMap hm,DcMotorEx parallelEncoder, DcMotorEx perpendicularEncoder, Pose initialPose){
+        this.pose = initialPose;
+        this.imu = new CoolIMU(hm);
+        this.localizer = new FunnyLocalizer(parallelEncoder, perpendicularEncoder, imu);
         localizer.setPoseEstimate(new Pose2d(initialPose.getX(), initialPose.getY(), initialPose.getHeading()));
     }
 

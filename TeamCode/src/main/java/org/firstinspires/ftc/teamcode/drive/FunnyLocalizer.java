@@ -5,6 +5,7 @@ import androidx.annotation.NonNull;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.localization.TwoTrackingWheelLocalizer;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
@@ -73,6 +74,23 @@ public class FunnyLocalizer extends TwoTrackingWheelLocalizer {
 
 //        parallelEncoder.setDirection(Encoder.Direction.REVERSE);
         perpendicularEncoder.setDirection(Encoder.Direction.REVERSE);
+    }
+
+    public FunnyLocalizer(DcMotorEx parallelEncoder, DcMotorEx perpendicularEncoder, CoolIMU imu) {
+        super(Arrays.asList(
+                new Pose2d(PARALLEL_X, PARALLEL_Y, 0),
+                new Pose2d(PERPENDICULAR_X, PERPENDICULAR_Y, Math.toRadians(90))
+        ));
+
+        this.imu = imu;
+
+        this.parallelEncoder = new Encoder(parallelEncoder);
+        this.perpendicularEncoder = new Encoder(perpendicularEncoder);
+
+        // TODO: reverse any encoders using Encoder.setDirection(Encoder.Direction.REVERSE)
+
+//        parallelEncoder.setDirection(Encoder.Direction.REVERSE);
+        this.perpendicularEncoder.setDirection(Encoder.Direction.REVERSE);
     }
 
     public static double encoderTicksToInches(double ticks) {

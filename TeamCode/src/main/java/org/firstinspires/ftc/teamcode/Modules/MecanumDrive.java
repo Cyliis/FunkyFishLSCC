@@ -17,9 +17,9 @@ import org.firstinspires.ftc.teamcode.Utils.Vector;
 @Config
 public class MecanumDrive implements IRobotModule {
 
-    private final PredictiveLocalizer localizer;
+    private PredictiveLocalizer localizer;
 
-    private final CoolMotor frontLeft, frontRight, backLeft, backRight;
+    public final CoolMotor frontLeft, frontRight, backLeft, backRight;
     public static String frontLeftMotorName = "mfl", frontRightMotorName = "mfr",
             backLeftMotorName = "mbl", backRightMotorName = "mbr";
     public static boolean frontLeftMotorReversed = false, frontRightMotorReversed = true, backLeftMotorReversed = false, backRightMotorReversed = true;
@@ -53,6 +53,10 @@ public class MecanumDrive implements IRobotModule {
 
     public MecanumDrive(HardwareMap hm, Localizer localizer){
         this(hm, localizer, RunMode.Vector);
+    }
+
+    public void setLocalizer(Localizer localizer){
+        this.localizer = new PredictiveLocalizer(localizer);
     }
 
     public Vector powerVector = new Vector();

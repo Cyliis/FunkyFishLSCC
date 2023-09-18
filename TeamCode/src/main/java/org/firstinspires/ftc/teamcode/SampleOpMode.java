@@ -8,6 +8,7 @@ import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.Modules.Follower;
@@ -50,8 +51,9 @@ public class SampleOpMode extends LinearOpMode {
 
         telemetry = new MultipleTelemetry(telemetry, dash.getTelemetry());
 
-        localizer = new Localizer(hardwareMap, new Pose());
         drive = new MecanumDrive(hardwareMap, localizer);
+        localizer = new Localizer(hardwareMap, drive.frontLeft.motor, hardwareMap.get(DcMotorEx.class, "lift2"),new Pose());
+        drive.setLocalizer(localizer);
         follower = new Follower(drive, localizer);
         follower.setTrajectory(lol, 2);
 
@@ -76,17 +78,17 @@ public class SampleOpMode extends LinearOpMode {
             drive.update();
             loops++;
             telemetry.addData("loops", loops);
-            telemetry.addData("followed trajectory length",follower.getTrajectory().getLength());
-            telemetry.addData("followed point", follower.currentFollowedPoint);
-            telemetry.addData("correcting vector", follower.correctingVector);
+//            telemetry.addData("followed trajectory length",follower.getTrajectory().getLength());
+//            telemetry.addData("followed point", follower.currentFollowedPoint);
+//            telemetry.addData("correcting vector", follower.correctingVector);
             telemetry.addData("loops/sec", 1.0/loopTimer.seconds());
-            telemetry.addData("drive mode", drive.getRunMode());
-            telemetry.addData("target vector", drive.targetVector);
-            telemetry.addData("power vector", drive.powerVector);
-            telemetry.addData("current length", follower.getTrajectory().getLengthAt(follower.currentFollowedPoint));
-            telemetry.addData("current Tangent Velocity", follower.tangentVelocityVector);
-            telemetry.addData("current position", localizer.getPoseEstimate());
-            telemetry.addData("followed point", follower.getTrajectory().getFollowedPoint(localizer.getPoseEstimate(), follower.currentFollowedPoint));
+//            telemetry.addData("drive mode", drive.getRunMode());
+//            telemetry.addData("target vector", drive.targetVector);
+//            telemetry.addData("power vector", drive.powerVector);
+//            telemetry.addData("current length", follower.getTrajectory().getLengthAt(follower.currentFollowedPoint));
+//            telemetry.addData("current Tangent Velocity", follower.tangentVelocityVector);
+//            telemetry.addData("current position", localizer.getPoseEstimate());
+//            telemetry.addData("followed point", follower.getTrajectory().getFollowedPoint(localizer.getPoseEstimate(), follower.currentFollowedPoint));
             telemetry.update();
             loopTimer.reset();
         }
