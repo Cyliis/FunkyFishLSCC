@@ -71,8 +71,6 @@ public class SampleOpMode extends LinearOpMode {
         loopTimer.startTime();
 
         while(opModeIsActive() && !isStopRequested()){
-            for(LynxModule hub:hubs)
-                hub.clearBulkCache();
             localizer.update();
             follower.update();
             drive.update();
@@ -82,6 +80,7 @@ public class SampleOpMode extends LinearOpMode {
 //            telemetry.addData("followed point", follower.currentFollowedPoint);
 //            telemetry.addData("correcting vector", follower.correctingVector);
             telemetry.addData("loops/sec", 1.0/loopTimer.seconds());
+            loopTimer.reset();
 //            telemetry.addData("drive mode", drive.getRunMode());
 //            telemetry.addData("target vector", drive.targetVector);
 //            telemetry.addData("power vector", drive.powerVector);
@@ -90,7 +89,8 @@ public class SampleOpMode extends LinearOpMode {
 //            telemetry.addData("current position", localizer.getPoseEstimate());
 //            telemetry.addData("followed point", follower.getTrajectory().getFollowedPoint(localizer.getPoseEstimate(), follower.currentFollowedPoint));
             telemetry.update();
-            loopTimer.reset();
+            for(LynxModule hub:hubs)
+                hub.clearBulkCache();
         }
     }
 }
