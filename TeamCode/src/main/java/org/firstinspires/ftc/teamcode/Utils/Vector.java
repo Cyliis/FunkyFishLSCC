@@ -82,4 +82,7 @@ public class Vector {
     public String toString(){
         return String.valueOf(x) + " " + String.valueOf(y) + " " + String.valueOf(z);
     }
+
+
+
 }
