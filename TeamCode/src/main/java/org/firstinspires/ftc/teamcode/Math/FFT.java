@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 import static java.lang.Math.PI;
+import static java.lang.Math.log;
 
 public class FFT {
     private static int bitReverse(int x, int log2n){
@@ -48,7 +49,7 @@ public class FFT {
         }
         ans = fft(ans, log2n);
         for(int i = 0;i<n;i++){
-            ans.set(i, ans.get(i).conj().mult(new Complex(1.0/n,0)));
+            ans.set(i, ans.get(i).conj().mult(new Complex(1.0/(double)n,0)));
         }
         return ans;
     }
